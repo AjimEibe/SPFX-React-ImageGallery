@@ -6,6 +6,7 @@ import { escape } from '@microsoft/sp-lodash-subset';
 import spservices from '../../../spservices/spservices';
 import * as microsoftTeams from '@microsoft/teams-js';
 import { ICarouselImages } from './ICarouselmages';
+import { ImageClass } from './ImageClass';
 import 'video-react/dist/video-react.css'; // import css
 import { Player, BigPlayButton } from 'video-react';
 import Slider from "react-slick";
@@ -34,7 +35,9 @@ import {
 export default class Carousel extends React.Component<ICarouselProps, ICarouselState> {
 	private spService: spservices = null;
 	private _teamsContext: microsoftTeams.Context = null;
+	private numberImages: number = 2;
 
+	private images: ICarouselImages[];
 
 	public constructor(props: ICarouselProps) {
 		super(props);
@@ -67,15 +70,16 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 	}
 
 
-	private async loadPictures() {
+	private async loadPictures(): Promise<ICarouselImages[]> {
 
 		this.setState({ isLoading: true, hasError: false });
 		const tenantUrl = `https://${location.host}`;
 		let galleryImages: ICarouselImages[] = [];
-		let carouselImages: React.ReactElement<HTMLElement>[] = [];
+		//let carouselImages: React.ReactElement<HTMLElement>[] = [];
 
 		try {
 			const images = await this.spService.getImages(this.props.siteUrl, this.props.list, this.props.numberImages);
+			//	this.numberImages = this.props.numberImages;
 
 			for (const image of images) {
 
@@ -114,48 +118,43 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 
 				// Create Carousel Slides from Images
 
-				carouselImages = galleryImages.map((galleryImage, i) => {
-					return (
-						<div className='slideLoading' >
 
-							{galleryImage.mediaType == 'video' ?
-								<div >
-									<Player
-										poster={galleryImage.imageUrl}
-										style={{ width: '100%', height: '400px' }}>
-										<BigPlayButton position="center" />
-										<source src={galleryImage.serverRelativeUrl}
-										/>
-									</Player>
-								</div>
-								:
-								<div>
-									<Image src={galleryImage.imageUrl}
-										onLoadingStateChange={async (loadState: ImageLoadState) => {
-											console.log('imageload Status ' + i, loadState, galleryImage.imageUrl);
-											if (loadState == ImageLoadState.loaded) {
-												this.setState({ loadingImage: false });
-											}
-										}}
-										height={'400px'}
-										imageFit={ImageFit.cover}
-									/>
-									<div style={{ background: 'rgba(0, 0, 0, 0.3)', overflow: 'hidden', fontSize: FontSizes.size16, top: 0, transition: '.7s ease', textAlign: 'left', width: '200px', height: '350px', position: 'absolute', color: '#ffffff', padding: '25px' }}>
-										<h2 style={{ fontSize: FontSizes.size20, textTransform: 'uppercase', color: 'white' }}>{galleryImage.caption}</h2>
-									</div>
+				// return (
+				// 	<div className='slideLoading' >
+				// 		{
+				// 			<div>
+				// 				<Image src={galleryImages[1].imageUrl}
+				// 					onLoadingStateChange={async (loadState: ImageLoadState) => {
+				// 						console.log('imageload Status ', loadState, galleryImages[1].imageUrl);
+				// 						if (loadState == ImageLoadState.loaded) {
+				// 							this.setState({ loadingImage: false });
+				// 						}
+				// 					}}
+				// 					height={'400px'}
+				// 					imageFit={ImageFit.cover}
+				// 				/>
+				// 			</div>
+				// 		}
+				// 	</div>
+				// );
 
-								</div>
-							}
-						</div>
-					);
-				}
-				);
 
-				this.setState({ carouselImages: carouselImages, isLoading: false });
+				// this.setState({ carouselImages: carouselImages, isLoading: false });
 			}
 		} catch (error) {
 			this.setState({ hasError: true, errorMessage: decodeURIComponent(error.message) });
 		}
+		this.images =galleryImages;
+		return galleryImages;
+	}
+
+	private onButtomClick() {
+		// var min = 0;
+		// var max = 3;
+		// //this.rnd = min + (Math.random() * (max - min));
+		// console.log("Returns rnd from Buttom click method" + this.rnd.toFixed());
+		// this.render();
+		// this.rnd = 3;
 	}
 
 	public async componentDidMount() {
@@ -175,72 +174,45 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 			await this.loadPictures();
 		}
 	}
-	public render(): React.ReactElement<ICarouselProps> {
-		const sliderSettings = {
-			dots: true,
-			infinite: true,
-			speed: 500,
-			slidesToShow: 1,
-			slidesToScroll: 1,
-			lazyLoad: 'progressive',
-			autoplaySpeed: 3000,
-			initialSlide: this.state.photoIndex,
-			arrows: true,
-			draggable: true,
-			adaptiveHeight: true,
-			useCSS: true,
-			useTransform: true,
+	public render(): React.ReactElement<ICarouselImages> {
+		let rnd = 0;
+		//let images: ICarouselImages[];
+		let test = function () {
+			var min = 0;
+			var max = 3;
+			rnd = min + (Math.random() * (max - min));
+			console.log("Returns rnd from Buttom click method " + rnd.toFixed());
+
 		};
 
+		// this.loadPictures().then(function (result) {
+		// 	console.log(result[rnd.toFixed()].imageUrl);
+		// 	images = result;
+
+		// });
+		console.log("Images");
+		console.log(this.images);
 		return (
 			<div className={styles.carousel}>
 				<div>
+					<button onClick={test}> Test Buttom</button>
 				</div>
-				{
-					(!this.props.list) ?
-						<Placeholder iconName='Edit'
-							iconText={strings.WebpartConfigIconText}
-							description={strings.WebpartConfigDescription}
-							buttonLabel={strings.WebPartConfigButtonLabel}
-							hideButton={this.props.displayMode === DisplayMode.Read}
-							onConfigure={this.onConfigure.bind(this)} />
-						:
-						this.state.hasError ?
-							<MessageBar messageBarType={MessageBarType.error}>
-								{this.state.errorMessage}
-							</MessageBar>
-							:
-							this.state.isLoading ?
-								<Spinner size={SpinnerSize.large} label='loading images...' />
-								:
-								this.state.carouselImages.length == 0 ?
-									<div style={{ width: '300px', margin: 'auto' }}>
-										<Icon iconName="PhotoCollection"
-											style={{ fontSize: '250px', color: '#d9d9d9' }} />
-										<Label style={{ width: '250px', margin: 'auto', fontSize: FontSizes.size20 }}>No images in the library</Label>
-									</div>
-									:
-									<div style={{ width: '100%', height: '100%' }}>
-
-										<div style={{ width: '75%' }}>
-											<Slider
-												{...sliderSettings}
-												autoplay={true}
-												onReInit={() => {
-													if (!this.state.loadingImage)
-														$(".slideLoading").removeClass("slideLoading");
-												}}>
-												{
-													this.state.carouselImages
-												}
-											</Slider>
-										</div>
-										{
-											this.state.loadingImage &&
-											<Spinner size={SpinnerSize.small} label={'Loading...'} style={{ verticalAlign: 'middle', right: '30%', top: 20, position: 'absolute', fontSize: FontSizes.size18, color: CommunicationColors.primary }}></Spinner>
-										}
-									</div>
-				}
+				<div className='slideLoading' >
+					{
+						<div>
+							<Image src={this.images[rnd.toFixed()].imageUrl}
+								onLoadingStateChange={async (loadState: ImageLoadState) => {
+									console.log('imageload Status ', loadState, this.images[rnd.toFixed()].imageUrl);
+									if (loadState == ImageLoadState.loaded) {
+										this.setState({ loadingImage: false });
+									}
+								}}
+								height={'400px'}
+								imageFit={ImageFit.cover}
+							/>
+						</div>
+					}
+				</div>
 			</div>
 		);
 	}
