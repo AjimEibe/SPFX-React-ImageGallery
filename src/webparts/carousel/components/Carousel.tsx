@@ -6,7 +6,6 @@ import { escape } from '@microsoft/sp-lodash-subset';
 import spservices from '../../../spservices/spservices';
 import * as microsoftTeams from '@microsoft/teams-js';
 import { ICarouselImages } from './ICarouselmages';
-import { ImageClass } from './ImageClass';
 import 'video-react/dist/video-react.css'; // import css
 import { Player, BigPlayButton } from 'video-react';
 import Slider from "react-slick";
@@ -35,9 +34,6 @@ import {
 export default class Carousel extends React.Component<ICarouselProps, ICarouselState> {
 	private spService: spservices = null;
 	private _teamsContext: microsoftTeams.Context = null;
-	private numberImages: number = 2;
-
-	private images: ICarouselImages[];
 
 	public constructor(props: ICarouselProps) {
 		super(props);
@@ -70,12 +66,12 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 	}
 
 
-	private async loadPictures(): Promise<ICarouselImages[]> {
+	private async loadPictures(){
 
 		this.setState({ isLoading: true, hasError: false });
 		const tenantUrl = `https://${location.host}`;
 		let galleryImages: ICarouselImages[] = [];
-		//let carouselImages: React.ReactElement<HTMLElement>[] = [];
+		let carouselImages: React.ReactElement<HTMLElement>[] = [];
 
 		try {
 			const images = await this.spService.getImages(this.props.siteUrl, this.props.list, this.props.numberImages);
@@ -119,43 +115,33 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 				// Create Carousel Slides from Images
 
 
-				// return (
-				// 	<div className='slideLoading' >
-				// 		{
-				// 			<div>
-				// 				<Image src={galleryImages[1].imageUrl}
-				// 					onLoadingStateChange={async (loadState: ImageLoadState) => {
-				// 						console.log('imageload Status ', loadState, galleryImages[1].imageUrl);
-				// 						if (loadState == ImageLoadState.loaded) {
-				// 							this.setState({ loadingImage: false });
-				// 						}
-				// 					}}
-				// 					height={'400px'}
-				// 					imageFit={ImageFit.cover}
-				// 				/>
-				// 			</div>
-				// 		}
-				// 	</div>
-				// );
+				carouselImages = galleryImages.map((galleryImage, i) => {
+					return (
+						<div className='slideLoading' >
+								<div>
+									<Image src={galleryImage.imageUrl}
+										onLoadingStateChange={async (loadState: ImageLoadState) => {
+											console.log('imageload Status ' + i, loadState, galleryImage.imageUrl);
+											if (loadState == ImageLoadState.loaded) {
+												this.setState({ loadingImage: false });
+											}
+										}}
+										height={'400px'}
+										imageFit={ImageFit.cover}
+									/>
+								</div>
+						</div>
+					);
+				}
+				);
+				this.setState({ carouselImages: carouselImages, isLoading: false });
 
-
-				// this.setState({ carouselImages: carouselImages, isLoading: false });
 			}
 		} catch (error) {
 			this.setState({ hasError: true, errorMessage: decodeURIComponent(error.message) });
 		}
-		this.images =galleryImages;
-		return galleryImages;
 	}
 
-	private onButtomClick() {
-		// var min = 0;
-		// var max = 3;
-		// //this.rnd = min + (Math.random() * (max - min));
-		// console.log("Returns rnd from Buttom click method" + this.rnd.toFixed());
-		// this.render();
-		// this.rnd = 3;
-	}
 
 	public async componentDidMount() {
 		await this.loadPictures();
@@ -191,7 +177,7 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 
 		// });
 		console.log("Images");
-		console.log(this.images);
+		console.log(this.state.carouselImages);
 		return (
 			<div className={styles.carousel}>
 				<div>
@@ -200,16 +186,9 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 				<div className='slideLoading' >
 					{
 						<div>
-							<Image src={this.images[rnd.toFixed()].imageUrl}
-								onLoadingStateChange={async (loadState: ImageLoadState) => {
-									console.log('imageload Status ', loadState, this.images[rnd.toFixed()].imageUrl);
-									if (loadState == ImageLoadState.loaded) {
-										this.setState({ loadingImage: false });
-									}
-								}}
-								height={'400px'}
-								imageFit={ImageFit.cover}
-							/>
+							{
+								this.state.carouselImages[0]
+							}
 						</div>
 					}
 				</div>
