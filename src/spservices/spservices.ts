@@ -1,6 +1,3 @@
-// João Mendes
-// March 2019
-
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { sp, Fields, Web, SearchResults, Field, PermissionKind, RegionalSettings, PagedItemCollection } from '@pnp/sp';
 import { graph, } from "@pnp/graph";

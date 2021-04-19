@@ -2,6 +2,7 @@ import * as React from 'react';
 import styles from './Carousel.module.scss';
 import { ICarouselProps } from './ICarouselProps';
 import { ICarouselState } from './ICarouselState';
+import { RandomIndex } from './RandomIndex';
 import { escape } from '@microsoft/sp-lodash-subset';
 import spservices from '../../../spservices/spservices';
 import * as microsoftTeams from '@microsoft/teams-js';
@@ -34,19 +35,14 @@ import {
 export default class Carousel extends React.Component<ICarouselProps, ICarouselState> {
 	private spService: spservices = null;
 	private _teamsContext: microsoftTeams.Context = null;
+	public rnd: RandomIndex = null;
 
 	public constructor(props: ICarouselProps) {
 		super(props);
 		this.spService = new spservices(this.props.context);
 
-		if (this.props.context.microsoftTeams) {
-			this.props.context.microsoftTeams.getContext(context => {
-				this._teamsContext = context;
-				console.log('ctt', this._teamsContext.theme);
-				this.setState({ teamsTheme: this._teamsContext.theme });
-			});
+		this.rnd = new RandomIndex(0);
 
-		}
 
 		this.state = {
 			isLoading: false,
@@ -66,9 +62,8 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 	}
 
 
-	private async loadPictures(){
+	private async loadPictures() {
 
-		this.setState({ isLoading: true, hasError: false });
 		const tenantUrl = `https://${location.host}`;
 		let galleryImages: ICarouselImages[] = [];
 		let carouselImages: React.ReactElement<HTMLElement>[] = [];
@@ -112,24 +107,24 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 					},
 				);
 
-				// Create Carousel Slides from Images
+				// Create Gallery Slides from Images
 
 
 				carouselImages = galleryImages.map((galleryImage, i) => {
 					return (
-						<div className='slideLoading' >
-								<div>
-									<Image src={galleryImage.imageUrl}
-										onLoadingStateChange={async (loadState: ImageLoadState) => {
-											console.log('imageload Status ' + i, loadState, galleryImage.imageUrl);
-											if (loadState == ImageLoadState.loaded) {
-												this.setState({ loadingImage: false });
-											}
-										}}
-										height={'400px'}
-										imageFit={ImageFit.cover}
-									/>
-								</div>
+						<div className='slideLoading'>
+							<div>
+								<Image src={galleryImage.imageUrl}
+									onLoadingStateChange={async (loadState: ImageLoadState) => {
+										console.log('imageload Status ' + i, loadState, galleryImage.imageUrl);
+										if (loadState == ImageLoadState.loaded) {
+											this.setState({ loadingImage: false });
+										}
+									}}
+									height={'400px'}
+
+								/>
+							</div>
 						</div>
 					);
 				}
@@ -143,8 +138,10 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 	}
 
 
+
 	public async componentDidMount() {
 		await this.loadPictures();
+
 	}
 
 	public async componentDidUpdate(prevProps: ICarouselProps) {
@@ -152,45 +149,41 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 		if (!this.props.list || !this.props.siteUrl) return;
 		// Get  Properties change
 		if (prevProps.list !== this.props.list || prevProps.numberImages !== this.props.numberImages) {
-			/*
-			 this.galleryImages = [];
-			 this._carouselImages = [];
-			 this.setState({ images: this.galleryImages, carouselImages: t.his._carouselImages, isLoading: false });
-			 */
 			await this.loadPictures();
 		}
 	}
+
+
+	public changeImage = () => {
+		let rndval: number;
+		var min = 0;
+		var max = this.state.carouselImages.length;
+		rndval = min + (Math.random() * (max - min));
+		var y: number = +rndval.toFixed();
+		this.setState({ photoIndex: y });
+		this.setState({ photoIndex: y });
+		this.setState({ photoIndex: y });
+		//this.rnd.random = 2;
+	}
+
+
 	public render(): React.ReactElement<ICarouselImages> {
-		let rnd = 0;
-		//let images: ICarouselImages[];
-		let test = function () {
-			var min = 0;
-			var max = 3;
-			rnd = min + (Math.random() * (max - min));
-			console.log("Returns rnd from Buttom click method " + rnd.toFixed());
-
-		};
-
-		// this.loadPictures().then(function (result) {
-		// 	console.log(result[rnd.toFixed()].imageUrl);
-		// 	images = result;
-
-		// });
-		console.log("Images");
-		console.log(this.state.carouselImages);
+		console.log("Random value");
+		console.log(this.state.photoIndex);
 		return (
-			<div className={styles.carousel}>
+			<div>
 				<div>
-					<button onClick={test}> Test Buttom</button>
-				</div>
-				<div className='slideLoading' >
 					{
-						<div>
+						<div style= {{display: 'flex', alignItems:'center', justifyContent:'center'}}>
 							{
-								this.state.carouselImages[0]
+								this.state.carouselImages[this.state.photoIndex]
 							}
 						</div>
 					}
+				</div>
+				<div style= {{display: 'flex', alignItems:'center', justifyContent:'center'}}>
+				<br></br><br></br>
+					<button onClick={this.changeImage}> Next Image</button>
 				</div>
 			</div>
 		);
